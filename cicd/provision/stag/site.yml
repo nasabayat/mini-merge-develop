@@ -1,0 +1,29 @@
+---
+# All tasks below are run in "staging" server.
+- name: Deploy the application to the "staging" server
+  hosts: staging
+  remote_user: vagrant
+  become: yes
+  tasks:
+    - name: create the application directory
+      file: 
+        path: /home/vagrant/mini
+        state: directory
+        owner: vagrant
+        group: vagrant
+    - name: copy docker files over
+      copy: 
+        src: ../../../docker/stag/
+        dest: /home/vagrant/mini/docker/stag
+        owner: vagrant
+        group: vagrant
+    - name: bring the application up
+      make:
+        chdir: /home/vagrant/mini/docker/stag
+        target: run
+    - name: install "secure-delete" package
+      apt:
+        name: secure-delete
+        state: present
+    - name: secure deleting application files
+      command: srm -vzr /home/vagrant/mini

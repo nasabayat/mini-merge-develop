@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+
+    options {
+        skipDefaultCheout(true)
+    }
+
+    stages {
+        stage('Git) { 
+            steps {
+                echo '> Checking out the Git version control ...'
+                checkout scm
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo '> Building the docker images ...'
+                sh 'make -sC docker/stage build'
+            }
+        }
+
+        stage('push') {
+            steps {
+                echo '> Pushing docker images to DockerHub'
+                sh 'make -sC docker/stage push'
+            }
+        }
+
+        stage('Destroy) {
+            steps {
+                echo '> Destroying the docker artifacts ...'
+                sh 'make -sC docker/stage destroy'
+            }
+        }
+
+        stage('Deploy') {
+            steps{
+                echo 'Deploying the application ...'
+                sh 'ansible-playbook cicd/provision/stage/site.yml -i cicd/provision/stage/hosts.yml'
+            }
+        }
+    }
+}
